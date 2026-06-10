@@ -275,7 +275,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
     <p class="modal-ttl" id="m-prod-ttl">商品を追加</p>
     <div class="sec-box" style="margin-bottom:14px">
       <div class="sec-box-ttl">商品ID <span class="admin-badge">管理者のみ</span></div>
-      <input class="fi" id="f-pid" disabled style="font-family:monospace;letter-spacing:.04em">
+      <input class="fi" id="f-pid" style="font-family:monospace;letter-spacing:.04em" placeholder="例：P0001">
+      <p style="font-size:11px;color:var(--txt3);margin-top:4px">※ 変更する場合は重複しないIDを入力してください</p>
     </div>
     <div class="sec-box">
       <div class="sec-box-ttl">基本情報</div>
@@ -291,15 +292,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
       <div class="fr2">
         <div class="fg"><label class="fl">定価（税込）</label><input class="fi" id="f-pprice" placeholder="例：3800" type="number" oninput="calcSalePrice()"></div>
         <div class="fg">
-          <label class="fl">販売価格（定価の3割増し）</label>
-          <div class="price-calc-box"><span class="price-display" id="f-sale-price">—</span><span style="font-size:11px;color:var(--txt3)">×1.3</span></div>
+          <label class="fl">販売価格（定価の30%増）</label>
+          <div class="price-calc-box"><span class="price-display" id="f-sale-price">—</span><span style="font-size:11px;color:var(--txt3)">定価 × 1.3</span></div>
         </div>
       </div>
     </div>
     <div class="sec-box">
       <div class="sec-box-ttl">サイズ・カラー</div>
-      <div class="fg"><label class="fl">サイズ（カンマ区切り）</label><input class="fi" id="f-psizes" placeholder="例：XS,S,M,L,XL,XXL"></div>
-      <div class="fg"><label class="fl">カラー（カンマ区切り）</label><input class="fi" id="f-pcolors" placeholder="例：ホワイト,ネイビー,ブラック" oninput="renderColorImgRows()"></div>
+
+      <!-- サイズ: ボタン＋手動入力 -->
+      <div class="fg">
+        <label class="fl">サイズ</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px" id="size-btn-group"></div>
+        <input class="fi" id="f-psizes" placeholder="例：XS,S,M,L,XL,XXL（カンマ区切り・直接編集も可）" oninput="onSizesInput()">
+        <p style="font-size:11px;color:var(--txt3);margin-top:4px">ボタンで追加、または上のフィールドを直接編集してください</p>
+      </div>
+
+      <!-- カラー: サジェスト＋手動入力 -->
+      <div class="fg">
+        <label class="fl">カラー</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px" id="color-suggest-group"></div>
+        <input class="fi" id="f-pcolors" placeholder="例：ホワイト,ネイビー,ブラック（カンマ区切り）" oninput="renderColorImgRows();renderColorSuggest()">
+        <p style="font-size:11px;color:var(--txt3);margin-top:4px">上のボタンはカラー管理に登録済みのカラーです。クリックで追加されます</p>
+      </div>
+
       <div class="fg"><label class="fl">カラー別サムネイル画像</label><div id="color-img-rows"></div></div>
     </div>
     <div class="sec-box">
@@ -323,17 +339,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
   <div class="modal" id="m-color" style="display:none">
     <p class="modal-ttl" id="m-color-ttl">カラーを追加</p>
     <div class="fr2">
-      <div class="fg"><label class="fl">カラー名</label><input class="fi" id="f-color-name" placeholder="例：スカイブルー" oninput="updateColorPreview()"></div>
       <div class="fg">
-        <label class="fl">カラー（カラーピッカー）</label>
+        <label class="fl">カラー名</label>
+        <input class="fi" id="f-color-name" placeholder="例：スカイブルー" oninput="updateColorPreview()">
+      </div>
+      <div class="fg">
+        <label class="fl">カラーコード（HEX）</label>
         <div style="display:flex;align-items:center;gap:8px">
-          <input type="color" id="f-color-hex" value="#185FA5" style="width:44px;height:36px;border:.5px solid var(--border2);border-radius:var(--radius-sm);cursor:pointer;padding:2px" oninput="syncColorFromPicker()">
-          <input class="fi" id="f-color-hex-txt" placeholder="#185FA5" oninput="syncColorFromText()" style="flex:1">
+          <input type="color" id="f-color-hex" value="#185FA5"
+            style="width:44px;height:36px;border:.5px solid var(--border2);border-radius:var(--radius-sm);cursor:pointer;padding:2px;flex-shrink:0"
+            oninput="onColorPickerChange()">
+          <input class="fi" id="f-color-hex-txt" value="#185FA5" placeholder="#185FA5"
+            style="flex:1;font-family:monospace"
+            oninput="onColorHexTxtChange()">
         </div>
+        <p style="font-size:11px;color:var(--txt3);margin-top:4px">左のカラーピッカーか、右に直接HEX値（例：#FF0000）を入力</p>
       </div>
     </div>
     <div style="margin-top:8px;padding:12px;background:var(--bg2);border-radius:var(--radius-sm);display:flex;align-items:center;gap:10px">
-      <div id="color-preview-dot" style="width:32px;height:32px;border-radius:50%;border:.5px solid rgba(0,0,0,.1)"></div>
+      <div id="color-preview-dot" style="width:32px;height:32px;border-radius:50%;border:.5px solid rgba(0,0,0,.1);background:#185FA5"></div>
       <span id="color-preview-name" style="font-size:14px;color:var(--txt)">プレビュー</span>
     </div>
     <div class="modal-acts">
@@ -574,7 +598,8 @@ function openModal(type,id){
   } else if(type==='prod'){
     editProdId=id; const p=id?db.prods.find(x=>x.id===id):null;
     document.getElementById('m-prod-ttl').textContent=id?'商品を編集':'商品を追加';
-    document.getElementById('f-pid').value=id?`P${String(id).padStart(4,'0')}`:`P${String(db.nextProdId).padStart(4,'0')} (保存後確定)`;
+    // 商品ID — 編集可能（新規は次IDをデフォルト、既存はそのIDを表示）
+    document.getElementById('f-pid').value=id?`P${String(id).padStart(4,'0')}`:`P${String(db.nextProdId).padStart(4,'0')}`;
     document.getElementById('f-pname').value=p?p.name:'';
     document.getElementById('f-pheadline').value=p?p.headline||'':'';
     document.getElementById('f-pdesc').value=p?p.desc||'':'';
@@ -587,6 +612,8 @@ function openModal(type,id){
     sel.innerHTML=db.cats.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
     if(p)sel.value=p.catId;
     renderColorImgRows();
+    renderSizeBtns();
+    renderColorSuggest();
     steState=p&&p.sizeTable&&p.sizeTable.cols.length
       ?{cols:[...p.sizeTable.cols],rows:p.sizeTable.rows.map(r=>({label:r.label,cells:[...r.cells]}))}
       :{cols:['XS','S','M','L','XL','XXL'],rows:[{label:'SIZE(cm)',cells:['','','','','','']},{label:'サイズNo.',cells:['01','02','03','04','05','06']}]};
@@ -597,20 +624,109 @@ function openModal(type,id){
     document.getElementById('m-color-ttl').textContent=id?'カラーを編集':'カラーを追加';
     document.getElementById('f-color-name').value=c?c.name:'';
     const hex=c?c.hex:'#185FA5';
+    // ピッカーとテキスト両方に確実にセット
     document.getElementById('f-color-hex').value=hex;
     document.getElementById('f-color-hex-txt').value=hex;
-    updateColorPreview();
+    document.getElementById('color-preview-dot').style.background=hex;
+    document.getElementById('color-preview-name').textContent=c?c.name:'プレビュー';
     document.getElementById('m-color').style.display='block';
   }
 }
 function closeModal(){document.getElementById('ov').classList.remove('on')}
 function ovClick(e){if(e.target.id==='ov')closeModal()}
 
-function calcSalePrice(){const v=parseFloat(document.getElementById('f-pprice').value);document.getElementById('f-sale-price').textContent=(!isNaN(v)&&v>0)?`¥${Math.round(v*1.3).toLocaleString()}`:'—'}
-function syncColorFromPicker(){const h=document.getElementById('f-color-hex').value;document.getElementById('f-color-hex-txt').value=h;updateColorPreview()}
-function syncColorFromText(){const t=document.getElementById('f-color-hex-txt').value.trim();if(/^#[0-9A-Fa-f]{6}$/.test(t))document.getElementById('f-color-hex').value=t;updateColorPreview()}
-function updateColorPreview(){const h=document.getElementById('f-color-hex').value;document.getElementById('f-color-hex-txt').value=h;document.getElementById('color-preview-dot').style.background=h;document.getElementById('color-preview-name').textContent=document.getElementById('f-color-name').value||'プレビュー'}
+// ===== 販売価格：定価の30%増 =====
+function calcSalePrice(){
+  const v=parseFloat(document.getElementById('f-pprice').value);
+  document.getElementById('f-sale-price').textContent=(!isNaN(v)&&v>0)?`¥${Math.round(v*1.3).toLocaleString()}`:'—';
+}
+
+// ===== カラーピッカー同期（双方向・確実に動作）=====
+function onColorPickerChange(){
+  const hex=document.getElementById('f-color-hex').value;
+  document.getElementById('f-color-hex-txt').value=hex;
+  updateColorPreview();
+}
+function onColorHexTxtChange(){
+  const txt=document.getElementById('f-color-hex-txt').value.trim();
+  // 有効なHEX形式（#RGB or #RRGGBB）なら即座にピッカーへ反映
+  if(/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(txt)){
+    const full = txt.length===4
+      ? '#'+txt[1]+txt[1]+txt[2]+txt[2]+txt[3]+txt[3]
+      : txt;
+    document.getElementById('f-color-hex').value=full;
+  }
+  updateColorPreview();
+}
+function updateColorPreview(){
+  const hex=document.getElementById('f-color-hex').value;
+  document.getElementById('color-preview-dot').style.background=hex;
+  document.getElementById('color-preview-name').textContent=document.getElementById('f-color-name').value||'プレビュー';
+}
+// 後方互換
+function syncColorFromPicker(){onColorPickerChange()}
+function syncColorFromText(){onColorHexTxtChange()}
+
 function handleCatImg(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{tmpCatImg=ev.target.result;const prv=document.getElementById('cat-img-prv');prv.src=tmpCatImg;prv.style.display='block';document.getElementById('cat-img-icon').style.display='none';document.getElementById('cat-img-lbl').textContent='クリックして変更'};r.readAsDataURL(f)}
+
+// ===== サイズボタン群の描画 =====
+const ALL_SIZES=['SS','XS','S','M','L','XL','XXL','XXXL','XXXXL','F','フリー'];
+function renderSizeBtns(){
+  const current=document.getElementById('f-psizes').value.split(',').map(s=>s.trim()).filter(Boolean);
+  document.getElementById('size-btn-group').innerHTML=ALL_SIZES.map(sz=>{
+    const active=current.includes(sz);
+    return`<button type="button" class="btn btn-xs${active?' btn-p':''}"
+      style="font-size:12px;${active?'':'opacity:.7'}"
+      onclick="toggleSizeBtn('${sz}')">${active?'✓ ':''} ${sz}</button>`;
+  }).join('');
+}
+function toggleSizeBtn(sz){
+  const inp=document.getElementById('f-psizes');
+  let current=inp.value.split(',').map(s=>s.trim()).filter(Boolean);
+  if(current.includes(sz)){current=current.filter(s=>s!==sz)}
+  else{
+    // ALL_SIZESの順序で挿入
+    const allIdx=ALL_SIZES.indexOf(sz);
+    let inserted=false;
+    const next=[];
+    for(const s of ALL_SIZES){
+      if(s===sz){next.push(sz);inserted=true}
+      else if(current.includes(s)){next.push(s)}
+    }
+    // ALL_SIZESにないカスタムサイズは末尾
+    for(const s of current){if(!ALL_SIZES.includes(s))next.push(s)}
+    current=next;
+  }
+  inp.value=current.join(',');
+  renderSizeBtns();
+}
+function onSizesInput(){renderSizeBtns()}
+
+// ===== カラーサジェスト描画 =====
+function renderColorSuggest(){
+  const current=document.getElementById('f-pcolors').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const registered=db.colorMaster.map(c=>c.name);
+  document.getElementById('color-suggest-group').innerHTML=registered.map(name=>{
+    const active=current.includes(name);
+    const hex=getColorHex(name);
+    return`<button type="button" class="btn btn-xs${active?' btn-p':''}"
+      style="display:flex;align-items:center;gap:4px;${active?'':'opacity:.8'}"
+      onclick="toggleColorBtn('${name}')">
+      <span style="width:10px;height:10px;border-radius:50%;background:${hex};border:.5px solid rgba(0,0,0,.15);flex-shrink:0;display:inline-block"></span>
+      ${name}${active?' ✓':''}
+    </button>`;
+  }).join('');
+}
+function toggleColorBtn(name){
+  const inp=document.getElementById('f-pcolors');
+  let current=inp.value.split(',').map(s=>s.trim()).filter(Boolean);
+  if(current.includes(name)){current=current.filter(s=>s!==name)}
+  else{current.push(name)}
+  inp.value=current.join(',');
+  renderColorImgRows();
+  renderColorSuggest();
+}
+
 function renderColorImgRows(){
   const colors=document.getElementById('f-pcolors').value.split(',').map(s=>s.trim()).filter(Boolean);
   document.getElementById('color-img-rows').innerHTML=colors.map(c=>{
@@ -661,9 +777,25 @@ async function saveProd(){
   if(!name){toast('商品名を入力してください');return}
   if(!colors.length){toast('カラーを1色以上入力してください');return}
   if(!sizes.length){toast('サイズを1つ以上入力してください');return}
+  // 商品IDフィールドから取得（P0001形式 or 数値どちらも受け付ける）
+  const pidRaw=document.getElementById('f-pid').value.trim().replace(/^P0*/i,'');
+  const newId=parseInt(pidRaw)||null;
   const sizeTable=getSteData(),colorImgs={...tmpColorImgs};
-  if(editProdId){Object.assign(db.prods.find(x=>x.id===editProdId),{name,headline,desc,price,catId,colors,sizes,colorImgs,sizeTable});toast('商品を更新しました')}
-  else{db.prods.push({id:db.nextProdId++,catId,name,headline,desc,price,colors,sizes,colorImgs,sizeTable,active:true});toast('商品を追加しました')}
+  if(editProdId){
+    const prod=db.prods.find(x=>x.id===editProdId);
+    // IDが変更されていれば更新（重複チェック）
+    if(newId && newId!==editProdId){
+      if(db.prods.some(x=>x.id===newId&&x.id!==editProdId)){toast('その商品IDはすでに使われています');return}
+      prod.id=newId;
+    }
+    Object.assign(prod,{name,headline,desc,price,catId,colors,sizes,colorImgs,sizeTable});
+    toast('商品を更新しました');
+  } else {
+    const useId=newId&&!db.prods.some(x=>x.id===newId)?newId:db.nextProdId;
+    db.prods.push({id:useId,catId,name,headline,desc,price,colors,sizes,colorImgs,sizeTable,active:true});
+    db.nextProdId=Math.max(db.nextProdId,useId)+1;
+    toast('商品を追加しました');
+  }
   closeModal(); renderAdmProds(); renderAdmCats(); renderTop();
   await persistToServer();
 }
