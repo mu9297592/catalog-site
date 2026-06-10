@@ -10,7 +10,7 @@ const DEFAULT_DATA = JSON.stringify({
   nextCatId: 1, nextProdId: 1, nextColorId: 1 
 });
 
-const isLocal = !!process.env.NETLIFY_DEV; // より厳密なローカル判定
+const isLocal = !!process.env.NETLIFY_DEV;
 const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
 
 const verifyAuth = (authHeader) => {
@@ -37,8 +37,14 @@ exports.handler = async (event, context) => {
     }
 
     // 2. 本番環境 (Blobs)
-    // context.blobs が存在しない場合は fallback
-    const store = (context.blobs) ? context.blobs.getStore("workwear") : getStore("workwear");
+    // context.blobs が存在しない場合は、環境変数を使って手動で初期化
+    const store = (context.blobs) 
+      ? context.blobs.getStore("workwear") 
+      : getStore({ 
+          name: "workwear",
+          siteID: process.env.NETLIFY_SITE_ID,
+          token: process.env.NETLIFY_AUTH_TOKEN
+        });
 
     if (event.httpMethod === "GET") {
       const data = await store.get("catalog", { type: "text" });
