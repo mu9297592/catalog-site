@@ -1,0 +1,6 @@
+[build]
+  functions = "netlify/functions"
+
+[dev]
+  # 8888番ポートで起動し、関数を認識させるための設定
+  port = 8888
