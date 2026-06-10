@@ -40,10 +40,11 @@ exports.handler = async (event) => {
   }
 
   // 3. 本番環境 (Netlify Blobs)
-  const store = getStore({ name: "workwear" });
-
-  if (event.httpMethod === "GET") {
-    const data = await store.get("catalog");
+  const store = context.blobs.getStore("workwear");
+  
+if (event.httpMethod === "GET") {
+    // getStore からのデータ取得
+    const data = await store.get("catalog", { type: "text" });
     return { statusCode: 200, headers, body: data || DEFAULT_DATA };
   }
 
