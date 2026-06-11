@@ -160,6 +160,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
 /* TOAST */
 .toast{position:fixed;bottom:20px;right:20px;background:var(--txt);color:#fff;padding:10px 16px;border-radius:var(--radius-sm);font-size:13px;z-index:400;opacity:0;transform:translateY(6px);transition:all .22s;pointer-events:none;max-width:300px}
 .toast.on{opacity:1;transform:translateY(0)}
+/* IMPORT */
+.imp-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.imp-tbl th{text-align:left;padding:7px 10px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--txt3);border-bottom:.5px solid var(--border);background:var(--bg2)}
+.imp-tbl td{padding:8px 10px;border-bottom:.5px solid var(--border);vertical-align:top;color:var(--txt2)}
+.imp-tbl tr:last-child td{border-bottom:none}
+.imp-badge{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap}
+.imp-badge-update{background:var(--ok-bg);color:var(--ok)}
+.imp-badge-new{background:var(--accent-bg);color:var(--accent)}
+.imp-color-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:var(--bg3);border-radius:99px;font-size:11px;margin:2px}
+.imp-drop-active{border-color:var(--accent)!important;background:var(--accent-bg)!important}
 </style>
 </head>
 <body>
@@ -237,7 +247,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
         <table class="tbl" id="cat-tbl"></table>
       </div>
       <div class="adm-sec" id="adm-prods">
-        <div class="adm-hdr"><span class="adm-ttl">商品一覧</span><button class="btn btn-p btn-sm" onclick="openModal('prod',null)">＋ 追加</button></div>
+        <div class="adm-hdr">
+          <span class="adm-ttl">商品一覧</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-sm" onclick="openImportModal()" style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:15px;line-height:1">📁</span> フォルダからインポート
+            </button>
+            <button class="btn btn-p btn-sm" onclick="openModal('prod',null)">＋ 追加</button>
+          </div>
+        </div>
         <table class="tbl" id="prod-tbl"></table>
       </div>
       <div class="adm-sec" id="adm-colors">
@@ -351,7 +369,46 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
       <button class="btn btn-acc" onclick="saveColor()">変更を保存</button>
     </div>
   </div>
-</div>
+
+  <!-- IMPORT MODAL -->
+  <div class="modal" id="m-import" style="display:none;width:720px;max-width:96vw">
+    <p class="modal-ttl">📁 フォルダからインポート</p>
+    <div id="import-step1">
+      <p style="font-size:13px;color:var(--txt2);margin-bottom:16px;line-height:1.8">
+        商品画像が入ったフォルダを選択してください。<br>
+        ファイル名ルール：<code style="background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px">140601-0001_ホワイト.jpg</code><br>
+        <span style="font-size:12px;color:var(--txt3)">商品ID: <b>140601</b> ／ 連番: 0001（無視） ／ カラー: <b>ホワイト</b> ／ カテゴリー: 親フォルダ名</span>
+      </p>
+      <div id="import-drop-zone"
+        style="border:2px dashed var(--border2);border-radius:var(--radius);padding:40px 20px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg2)"
+        onclick="document.getElementById('import-folder-input').click()"
+        ondragover="importDragOver(event)" ondragleave="importDragLeave(event)" ondrop="importDrop(event)">
+        <div style="font-size:40px;margin-bottom:10px">📂</div>
+        <p style="font-size:14px;font-weight:500;color:var(--txt)">クリックしてフォルダを選択</p>
+        <p style="font-size:12px;color:var(--txt3);margin-top:6px">またはフォルダをここにドラッグ＆ドロップ</p>
+      </div>
+      <input type="file" id="import-folder-input" webkitdirectory multiple accept="image/*" style="display:none" onchange="handleImportFiles(this.files)">
+    </div>
+    <div id="import-step2" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <p style="font-size:13px;font-weight:500;color:var(--txt)" id="import-summary"></p>
+        <button class="btn btn-sm" onclick="resetImport()">← 選び直す</button>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="background:var(--ok-bg);color:var(--ok);padding:1px 8px;border-radius:99px;font-weight:600">既存更新</span>カラー画像を追加・上書き</span>
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="background:var(--accent-bg);color:var(--accent);padding:1px 8px;border-radius:99px;font-weight:600">新規追加</span>新しい商品として登録</span>
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="background:var(--bg3);color:var(--txt3);padding:1px 8px;border-radius:99px;font-weight:600">スキップ</span>解析できないファイル</span>
+      </div>
+      <div id="import-preview" style="max-height:380px;overflow-y:auto;border:.5px solid var(--border);border-radius:var(--radius-sm)"></div>
+      <div id="import-skip-list" style="margin-top:10px"></div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-acc" id="import-exec-btn" style="display:none" onclick="execImport()">✓ この内容でインポート</button>
+    </div>
+  </div>
+
+</div><!-- /.ov -->
 
 <div class="toast" id="toast"></div>
 
@@ -727,12 +784,31 @@ async function saveProd(){
   const catId=parseInt(document.getElementById('f-pcat').value);
   const colors=document.getElementById('f-pcolors').value.split(',').map(s=>s.trim()).filter(Boolean);
   const sizes=document.getElementById('f-psizes').value.split(',').map(s=>s.trim()).filter(Boolean);
-  if(!name){toast('商品名を入力してください');return}
+  // カラーとサイズは必須（商品名は空でも保存可）
   if(!colors.length){toast('カラーを1色以上入力してください');return}
   if(!sizes.length){toast('サイズを1つ以上入力してください');return}
-  const sizeTable=getSteData(),colorImgs={...tmpColorImgs};
-  if(editProdId){Object.assign(db.prods.find(x=>x.id===editProdId),{name,headline,desc,price,catId,colors,sizes,colorImgs,sizeTable});toast('商品を更新しました')}
-  else{db.prods.push({id:db.nextProdId++,catId,name,headline,desc,price,colors,sizes,colorImgs,sizeTable,active:true});toast('商品を追加しました')}
+  const sizeTable=getSteData(), colorImgs={...tmpColorImgs};
+  // 商品IDをフィールドから取得（数値のみ抽出）
+  const pidRaw = document.getElementById('f-pid').value.replace(/\D/g,'');
+  const newId = pidRaw ? parseInt(pidRaw) : null;
+  if(editProdId){
+    // 既存商品の更新
+    const prod = db.prods.find(x=>x.id===editProdId);
+    // IDが変更されていれば重複チェックして更新
+    if(newId && newId !== editProdId){
+      if(db.prods.some(x=>x.id===newId)){toast('その商品IDはすでに使用されています');return}
+      prod.id = newId;
+    }
+    Object.assign(prod,{name,headline,desc,price,catId,colors,sizes,colorImgs,sizeTable});
+    toast('商品を更新しました');
+  } else {
+    // 新規追加
+    const useId = (newId && !db.prods.some(x=>x.id===newId)) ? newId : db.nextProdId;
+    if(newId && db.prods.some(x=>x.id===newId)){toast('その商品IDはすでに使用されています');return}
+    db.prods.push({id:useId, catId, name, headline, desc, price, colors, sizes, colorImgs, sizeTable, active:true});
+    db.nextProdId = Math.max(db.nextProdId, useId) + 1;
+    toast('商品を追加しました');
+  }
   closeModal(); renderAdmProds(); renderAdmCats(); renderTop();
   await persistToServer();
 }
@@ -753,6 +829,164 @@ async function delColor(id){if(!confirm('このカラーを削除しますか？
 function admTab(key,el){document.querySelectorAll('.adm-mi').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.adm-sec').forEach(x=>x.classList.remove('on'));el.classList.add('on');document.getElementById('adm-'+key).classList.add('on')}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2500)}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+
+// =============================================
+// ===== フォルダインポート機能 =====
+// =============================================
+let importPlan = [];
+
+function openImportModal(){
+  resetImport();
+  document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
+  document.getElementById('m-import').style.display='block';
+  document.getElementById('ov').classList.add('on');
+}
+function resetImport(){
+  importPlan=[];
+  document.getElementById('import-step1').style.display='block';
+  document.getElementById('import-step2').style.display='none';
+  document.getElementById('import-exec-btn').style.display='none';
+  document.getElementById('import-folder-input').value='';
+}
+function importDragOver(e){e.preventDefault();document.getElementById('import-drop-zone').classList.add('imp-drop-active')}
+function importDragLeave(){document.getElementById('import-drop-zone').classList.remove('imp-drop-active')}
+function importDrop(e){
+  e.preventDefault();
+  document.getElementById('import-drop-zone').classList.remove('imp-drop-active');
+  const items=e.dataTransfer.items;
+  if(!items)return;
+  const files=[];
+  let dirFound=false;
+  for(let i=0;i<items.length;i++){
+    const entry=items[i].webkitGetAsEntry?items[i].webkitGetAsEntry():null;
+    if(entry&&entry.isDirectory){dirFound=true;readDirEntry(entry,files,()=>handleImportFiles(files));break}
+  }
+  if(!dirFound)handleImportFiles(e.dataTransfer.files);
+}
+function readDirEntry(dirEntry,files,done,depth=0){
+  const reader=dirEntry.createReader();
+  reader.readEntries(entries=>{
+    let pending=entries.filter(e=>e.isFile||e.isDirectory).length;
+    if(!pending){done();return}
+    entries.forEach(entry=>{
+      if(entry.isFile){entry.file(f=>{files.push(f);if(--pending===0)done()})}
+      else if(entry.isDirectory&&depth<2){readDirEntry(entry,files,()=>{if(--pending===0)done()},depth+1)}
+      else{if(--pending===0)done()}
+    });
+  });
+}
+
+async function handleImportFiles(fileList){
+  const files=Array.from(fileList).filter(f=>/\.(jpe?g|png|webp)$/i.test(f.name));
+  if(!files.length){toast('画像ファイルが見つかりませんでした');return}
+  const parsed=[],skipped=[];
+  for(const file of files){
+    const relPath=file.webkitRelativePath||file.name;
+    const parts=relPath.split('/');
+    const parentFolder=parts.length>=3?parts[parts.length-3]:(parts.length>=2?parts[parts.length-2]:'');
+    const fileName=parts[parts.length-1];
+    const m=fileName.match(/^(\d+)-\d+_(.+)\.(jpe?g|png|webp)$/i);
+    if(!m){skipped.push(fileName);continue}
+    parsed.push({productId:m[1],colorName:m[2],file,parentFolder,fileName});
+  }
+  if(!parsed.length){toast('解析できるファイルがありませんでした');return}
+  const grouped={};
+  for(const item of parsed){
+    const key=item.productId;
+    if(!grouped[key])grouped[key]={productId:key,parentFolder:item.parentFolder,colors:[],files:{}};
+    if(!grouped[key].colors.includes(item.colorName))grouped[key].colors.push(item.colorName);
+    grouped[key].files[item.colorName]=item.file;
+    if(item.parentFolder)grouped[key].parentFolder=item.parentFolder;
+  }
+  importPlan=[];
+  for(const key of Object.keys(grouped)){
+    const g=grouped[key];
+    const numId=parseInt(g.productId);
+    const existing=db.prods.find(p=>String(p.id)===g.productId||p.id===numId);
+    if(existing){
+      importPlan.push({type:'update',prod:existing,productId:g.productId,colors:g.colors,files:g.files,parentFolder:g.parentFolder});
+    } else {
+      const cat=db.cats.find(c=>c.name===g.parentFolder);
+      importPlan.push({type:'new',productId:g.productId,colors:g.colors,files:g.files,parentFolder:g.parentFolder,catId:cat?cat.id:null,catName:g.parentFolder});
+    }
+  }
+  renderImportPreview(importPlan,skipped);
+}
+
+function renderImportPreview(plan,skipped){
+  const updateCount=plan.filter(p=>p.type==='update').length;
+  const newCount=plan.filter(p=>p.type==='new').length;
+  document.getElementById('import-summary').textContent=`${plan.length}件の商品を検出（既存更新: ${updateCount}件、新規追加: ${newCount}件）`;
+  const rows=plan.map(item=>{
+    const badge=item.type==='update'
+      ?`<span class="imp-badge imp-badge-update">既存更新</span>`
+      :`<span class="imp-badge imp-badge-new">新規追加</span>`;
+    const name=item.type==='update'?(item.prod.name||`ID: ${item.productId}`):'（新規）';
+    const catCell=item.type==='update'
+      ?(db.cats.find(c=>c.id===item.prod.catId)||{}).name||'—'
+      :item.catId?`<span style="color:var(--ok)">${item.catName}</span>`
+        :`<span style="color:var(--err)">${item.catName}（未登録→自動作成）</span>`;
+    const chips=item.colors.map(c=>`<span class="imp-color-chip">${c}</span>`).join('');
+    return`<tr><td>${badge}</td><td style="font-family:monospace;font-weight:600;color:var(--txt)">${item.productId}</td><td style="color:var(--txt)">${name}</td><td>${catCell}</td><td><div style="display:flex;flex-wrap:wrap">${chips}</div></td></tr>`;
+  }).join('');
+  document.getElementById('import-preview').innerHTML=`
+    <table class="imp-tbl">
+      <thead><tr><th>種別</th><th>商品ID</th><th>商品名</th><th>カテゴリー</th><th>カラー</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--txt3)">対象なし</td></tr>'}</tbody>
+    </table>`;
+  document.getElementById('import-skip-list').innerHTML=skipped.length
+    ?`<p style="font-size:12px;color:var(--txt3)">⚠ スキップ: ${skipped.map(s=>`<code style="background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:11px">${s}</code>`).join(' ')}</p>`:'';
+  document.getElementById('import-step1').style.display='none';
+  document.getElementById('import-step2').style.display='block';
+  document.getElementById('import-exec-btn').style.display=plan.length?'inline-block':'none';
+}
+
+async function execImport(){
+  const btn=document.getElementById('import-exec-btn');
+  btn.textContent='処理中...'; btn.disabled=true;
+  let updatedCount=0,addedCount=0;
+  for(const item of importPlan){
+    const colorImgsB64={};
+    for(const[colorName,file]of Object.entries(item.files)){
+      try{colorImgsB64[colorName]=await fileToBase64(file)}catch(e){console.warn(e)}
+    }
+    if(item.type==='update'){
+      for(const colorName of item.colors){
+        if(!item.prod.colors.includes(colorName))item.prod.colors.push(colorName);
+        if(colorImgsB64[colorName]){
+          if(!item.prod.colorImgs)item.prod.colorImgs={};
+          item.prod.colorImgs[colorName]=colorImgsB64[colorName];
+        }
+      }
+      updatedCount++;
+    } else {
+      let catId=item.catId;
+      if(!catId&&item.catName){
+        const newCat={id:db.nextCatId++,name:item.catName,img:null,active:true};
+        db.cats.push(newCat); catId=newCat.id;
+      }
+      const numId=parseInt(item.productId)||db.nextProdId;
+      db.prods.push({id:numId,catId,name:'',headline:'',desc:'',price:0,colors:item.colors,colorImgs:colorImgsB64,sizes:['S','M','L','XL','XXL','XXXL'],sizeTable:null,active:true});
+      db.nextProdId=Math.max(db.nextProdId,numId)+1;
+      addedCount++;
+    }
+  }
+  await persistToServer();
+  renderAdmProds(); renderAdmCats(); renderTop();
+  closeModal();
+  btn.textContent='✓ この内容でインポート'; btn.disabled=false;
+  toast(`✓ インポート完了 — 更新: ${updatedCount}件、新規: ${addedCount}件`);
+}
+
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=e=>resolve(e.target.result);
+    r.onerror=reject;
+    r.readAsDataURL(file);
+  });
+}
+// =============================================
 
 // ===== BOOT =====
 initApp();
