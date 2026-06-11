@@ -160,19 +160,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
 /* TOAST */
 .toast{position:fixed;bottom:20px;right:20px;background:var(--txt);color:#fff;padding:10px 16px;border-radius:var(--radius-sm);font-size:13px;z-index:400;opacity:0;transform:translateY(6px);transition:all .22s;pointer-events:none;max-width:300px}
 .toast.on{opacity:1;transform:translateY(0)}
-
-/* IMPORT PREVIEW TABLE */
-.imp-tbl{width:100%;border-collapse:collapse;font-size:13px}
-.imp-tbl th{text-align:left;padding:7px 10px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--txt3);border-bottom:.5px solid var(--border);background:var(--bg2)}
-.imp-tbl td{padding:8px 10px;border-bottom:.5px solid var(--border);vertical-align:top;color:var(--txt2)}
-.imp-tbl tr:last-child td{border-bottom:none}
-.imp-tbl tr:hover td{background:var(--bg2)}
-.imp-badge{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap}
-.imp-badge-update{background:var(--ok-bg);color:var(--ok)}
-.imp-badge-new{background:var(--accent-bg);color:var(--accent)}
-.imp-badge-skip{background:var(--bg3);color:var(--txt3)}
-.imp-color-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:var(--bg3);border-radius:99px;font-size:11px;margin:2px}
-.imp-drop-active{border-color:var(--accent)!important;background:var(--accent-bg)!important}
 </style>
 </head>
 <body>
@@ -250,15 +237,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
         <table class="tbl" id="cat-tbl"></table>
       </div>
       <div class="adm-sec" id="adm-prods">
-        <div class="adm-hdr">
-          <span class="adm-ttl">商品一覧</span>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-sm" onclick="openImportModal()" style="display:flex;align-items:center;gap:4px">
-              <span style="font-size:15px;line-height:1">📁</span> フォルダからインポート
-            </button>
-            <button class="btn btn-p btn-sm" onclick="openModal('prod',null)">＋ 追加</button>
-          </div>
-        </div>
+        <div class="adm-hdr"><span class="adm-ttl">商品一覧</span><button class="btn btn-p btn-sm" onclick="openModal('prod',null)">＋ 追加</button></div>
         <table class="tbl" id="prod-tbl"></table>
       </div>
       <div class="adm-sec" id="adm-colors">
@@ -296,7 +275,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
     <p class="modal-ttl" id="m-prod-ttl">商品を追加</p>
     <div class="sec-box" style="margin-bottom:14px">
       <div class="sec-box-ttl">商品ID <span class="admin-badge">管理者のみ</span></div>
-      <input class="fi" id="f-pid" disabled style="font-family:monospace;letter-spacing:.04em">
+      <input class="fi" id="f-pid" style="font-family:monospace;letter-spacing:.04em" placeholder="例：140601（数値のみ）">
     </div>
     <div class="sec-box">
       <div class="sec-box-ttl">基本情報</div>
@@ -312,8 +291,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
       <div class="fr2">
         <div class="fg"><label class="fl">定価（税込）</label><input class="fi" id="f-pprice" placeholder="例：3800" type="number" oninput="calcSalePrice()"></div>
         <div class="fg">
-          <label class="fl">販売価格（定価の3割増し）</label>
-          <div class="price-calc-box"><span class="price-display" id="f-sale-price">—</span><span style="font-size:11px;color:var(--txt3)">×1.3</span></div>
+          <label class="fl">仕入れ価格（定価の30%）</label>
+          <div class="price-calc-box"><span class="price-display" id="f-sale-price">—</span><span style="font-size:11px;color:var(--txt3)">×0.3</span></div>
         </div>
       </div>
     </div>
@@ -325,13 +304,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
     </div>
     <div class="sec-box">
       <div class="sec-box-ttl">サイズ表 <span style="font-size:11px;color:var(--txt3);font-weight:400;margin-left:4px">任意</span></div>
+      <!-- ペーストエリア -->
+      <div style="margin-bottom:10px">
+        <label class="fl">Excelやスプレッドシートからペースト</label>
+        <textarea id="ste-paste-area" class="ft" rows="4"
+          placeholder="ExcelやNumbersからコピーした表をここにペースト（Ctrl+V / ⌘V）してください"
+          style="font-family:monospace;font-size:12px;min-height:80px"
+          oninput="parsePasteToTable(this.value)"></textarea>
+        <p style="font-size:11px;color:var(--txt3);margin-top:3px">ペーストすると下の表に自動反映されます。その後手動で編集も可能です。</p>
+      </div>
       <div class="ste-wrap">
         <div class="ste-toolbar">
           <span style="font-size:12px;color:var(--txt3)">行：</span><button class="btn btn-xs" onclick="steAddRow()">＋ 行を追加</button>
           <span style="font-size:12px;color:var(--txt3);margin-left:8px">列：</span><button class="btn btn-xs" onclick="steAddCol()">＋ 列を追加</button>
+          <button class="btn btn-xs" onclick="steClear()" style="margin-left:auto;color:var(--err)">クリア</button>
         </div>
         <div class="ste-table-wrap"><table class="ste-table" id="ste-table"></table></div>
-        <p style="font-size:11px;color:var(--txt3);padding:0 10px 8px">※直接入力できます</p>
+        <p style="font-size:11px;color:var(--txt3);padding:0 10px 8px">※直接入力・編集できます</p>
       </div>
     </div>
     <div class="modal-acts">
@@ -362,52 +351,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
       <button class="btn btn-acc" onclick="saveColor()">変更を保存</button>
     </div>
   </div>
+</div>
 
-  <!-- IMPORT MODAL -->
-  <div class="modal" id="m-import" style="display:none;width:720px;max-width:96vw">
-    <p class="modal-ttl">📁 フォルダからインポート</p>
-
-    <!-- STEP 1: フォルダ選択 -->
-    <div id="import-step1">
-      <p style="font-size:13px;color:var(--txt2);margin-bottom:16px;line-height:1.8">
-        商品画像が入ったフォルダを選択してください。<br>
-        ファイル名ルール：<code style="background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px">140601-0001_ホワイト.jpg</code><br>
-        <span style="font-size:12px;color:var(--txt3)">商品ID: <b>140601</b> ／ 連番: 0001（無視） ／ カラー: <b>ホワイト</b> ／ カテゴリー: 親フォルダ名</span>
-      </p>
-      <div id="import-drop-zone"
-        style="border:2px dashed var(--border2);border-radius:var(--radius);padding:40px 20px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg2)"
-        onclick="document.getElementById('import-folder-input').click()"
-        ondragover="importDragOver(event)" ondragleave="importDragLeave(event)" ondrop="importDrop(event)">
-        <div style="font-size:40px;margin-bottom:10px">📂</div>
-        <p style="font-size:14px;font-weight:500;color:var(--txt)">クリックしてフォルダを選択</p>
-        <p style="font-size:12px;color:var(--txt3);margin-top:6px">またはフォルダをここにドラッグ＆ドロップ</p>
-        <p style="font-size:11px;color:var(--txt3);margin-top:4px">JPG / PNG / WEBP 対応</p>
-      </div>
-      <input type="file" id="import-folder-input" webkitdirectory multiple accept="image/*" style="display:none" onchange="handleImportFiles(this.files)">
-    </div>
-
-    <!-- STEP 2: プレビュー確認 -->
-    <div id="import-step2" style="display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-        <p style="font-size:13px;font-weight:500;color:var(--txt)" id="import-summary"></p>
-        <button class="btn btn-sm" onclick="resetImport()">← 選び直す</button>
-      </div>
-      <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="background:var(--ok-bg);color:var(--ok);padding:1px 8px;border-radius:99px;font-weight:600">既存更新</span>カラー画像を追加・上書き</span>
-        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="background:var(--accent-bg);color:var(--accent);padding:1px 8px;border-radius:99px;font-weight:600">新規追加</span>新しい商品として登録</span>
-        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="background:var(--bg3);color:var(--txt3);padding:1px 8px;border-radius:99px;font-weight:600">スキップ</span>解析できないファイル</span>
-      </div>
-      <div id="import-preview" style="max-height:380px;overflow-y:auto;border:.5px solid var(--border);border-radius:var(--radius-sm)"></div>
-      <div id="import-skip-list" style="margin-top:10px"></div>
-    </div>
-
-    <div class="modal-acts">
-      <button class="btn" onclick="closeModal()">キャンセル</button>
-      <button class="btn btn-acc" id="import-exec-btn" style="display:none" onclick="execImport()">✓ この内容でインポート</button>
-    </div>
-  </div>
-
-</div><!-- /.ov -->
+<div class="toast" id="toast"></div>
 
 <script>
 const DEFAULT_CMAP={
@@ -593,7 +539,7 @@ function renderAdmCats(){
     }).join('');
 }
 function renderAdmProds(){
-  document.getElementById('prod-tbl').innerHTML=`<tr><th>ID</th><th>画像</th><th>商品名</th><th>カテゴリー</th><th>定価</th><th>販売価格</th><th>状態</th><th>操作</th></tr>`+
+  document.getElementById('prod-tbl').innerHTML=`<tr><th>ID</th><th>画像</th><th>商品名</th><th>カテゴリー</th><th>定価</th><th>仕入れ価格</th><th>状態</th><th>操作</th></tr>`+
     db.prods.map(p=>{
       const cat=db.cats.find(c=>c.id===p.catId),fc=p.colors[0],img=p.colorImgs[fc];
       const th=img?`<img src="${img}" class="tbl-thumb">`:`<div class="tbl-thumb-wrap">${getCatEmoji(cat?cat.name:'')}</div>`;
@@ -601,7 +547,7 @@ function renderAdmProds(){
         <td><span class="id-badge">P${String(p.id).padStart(4,'0')}</span></td><td>${th}</td>
         <td style="color:var(--txt);font-weight:500;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</td>
         <td>${cat?cat.name:'—'}</td><td>¥${(p.price||0).toLocaleString()}</td>
-        <td style="font-weight:500;color:var(--txt)">${p.price?`¥${Math.round(p.price*1.3).toLocaleString()}`:'—'}</td>
+        <td style="font-weight:500;color:var(--txt)">${p.price?`¥${Math.round(p.price*0.3).toLocaleString()}`:'—'}</td>
         <td><span class="bdg ${p.active?'bdg-on':'bdg-off'}">${p.active?'表示':'非表示'}</span></td>
         <td><div style="display:flex;gap:5px;flex-wrap:wrap">
           <button class="btn btn-sm" onclick="openModal('prod',${p.id})">編集</button>
@@ -625,8 +571,9 @@ function renderAdmColors(){
 // ===== MODAL =====
 function openModal(type,id){
   tmpCatImg=null; tmpColorImgs={};
+  // 全モーダルを確実に非表示にしてから開く
+  document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
   document.getElementById('ov').classList.add('on');
-  ['m-cat','m-prod','m-color'].forEach(x=>document.getElementById(x).style.display='none');
   if(type==='cat'){
     editCatId=id; const c=id?db.cats.find(x=>x.id===id):null;
     document.getElementById('m-cat-ttl').textContent=id?'カテゴリーを編集':'カテゴリーを追加';
@@ -638,7 +585,7 @@ function openModal(type,id){
   } else if(type==='prod'){
     editProdId=id; const p=id?db.prods.find(x=>x.id===id):null;
     document.getElementById('m-prod-ttl').textContent=id?'商品を編集':'商品を追加';
-    document.getElementById('f-pid').value=id?`P${String(id).padStart(4,'0')}`:`P${String(db.nextProdId).padStart(4,'0')} (保存後確定)`;
+    document.getElementById('f-pid').value=id?String(id):String(db.nextProdId);
     document.getElementById('f-pname').value=p?p.name:'';
     document.getElementById('f-pheadline').value=p?p.headline||'':'';
     document.getElementById('f-pdesc').value=p?p.desc||'':'';
@@ -653,8 +600,9 @@ function openModal(type,id){
     renderColorImgRows();
     steState=p&&p.sizeTable&&p.sizeTable.cols.length
       ?{cols:[...p.sizeTable.cols],rows:p.sizeTable.rows.map(r=>({label:r.label,cells:[...r.cells]}))}
-      :{cols:['XS','S','M','L','XL','XXL'],rows:[{label:'SIZE(cm)',cells:['','','','','','']},{label:'サイズNo.',cells:['01','02','03','04','05','06']}]};
+      :{cols:[],rows:[]};
     renderSteTable();
+    document.getElementById('ste-paste-area').value='';
     document.getElementById('m-prod').style.display='block';
   } else if(type==='color'){
     editColorId=id; const c=id?db.colorMaster.find(x=>x.id===id):null;
@@ -670,7 +618,7 @@ function openModal(type,id){
 function closeModal(){document.getElementById('ov').classList.remove('on')}
 function ovClick(e){if(e.target.id==='ov')closeModal()}
 
-function calcSalePrice(){const v=parseFloat(document.getElementById('f-pprice').value);document.getElementById('f-sale-price').textContent=(!isNaN(v)&&v>0)?`¥${Math.round(v*1.3).toLocaleString()}`:'—'}
+function calcSalePrice(){const v=parseFloat(document.getElementById('f-pprice').value);document.getElementById('f-sale-price').textContent=(!isNaN(v)&&v>0)?`¥${Math.round(v*0.3).toLocaleString()}`:'—'}
 function syncColorFromPicker(){const h=document.getElementById('f-color-hex').value;document.getElementById('f-color-hex-txt').value=h;updateColorPreview()}
 function syncColorFromText(){const t=document.getElementById('f-color-hex-txt').value.trim();if(/^#[0-9A-Fa-f]{6}$/.test(t))document.getElementById('f-color-hex').value=t;updateColorPreview()}
 function updateColorPreview(){const h=document.getElementById('f-color-hex').value;document.getElementById('f-color-hex-txt').value=h;document.getElementById('color-preview-dot').style.background=h;document.getElementById('color-preview-name').textContent=document.getElementById('f-color-name').value||'プレビュー'}
@@ -687,6 +635,63 @@ function renderColorImgRows(){
 }
 function pickColorImg(cn){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{tmpColorImgs[cn]=ev.target.result;renderColorImgRows()};r.readAsDataURL(f)};inp.click()}
 function removeColorImg(c){delete tmpColorImgs[c];renderColorImgRows()}
+// ===== サイズ表ペースト解析 =====
+// Excel/Numbers/スプレッドシートからコピーしたタブ区切りテキストを解析して表に反映
+function parsePasteToTable(text){
+  const lines = text.split('\n').map(l=>l.trimEnd()).filter(l=>l.trim()!=='');
+  if(!lines.length) return;
+
+  // タブ区切りで分割
+  const matrix = lines.map(l=>l.split('\t'));
+  if(!matrix.length || !matrix[0].length) return;
+
+  // 1行目の処理: 先頭セルが空または行ラベル列かを判定
+  // 先頭セルが空 → ヘッダー行（列ラベル）として扱う
+  // 先頭セルが空でない → データ行として扱い、先頭セルを行ラベルにする
+
+  let cols = [];
+  let rows = [];
+
+  const firstRowFirstCell = matrix[0][0].trim();
+
+  if(firstRowFirstCell === ''){
+    // 1行目: [空, 列1, 列2, ...] → 列ヘッダー行
+    cols = matrix[0].slice(1).map(c=>c.trim());
+    for(let i=1;i<matrix.length;i++){
+      const row = matrix[i];
+      const label = row[0]||'';
+      const cells = row.slice(1).map(c=>c.trim());
+      // 列数に合わせてパディング
+      while(cells.length < cols.length) cells.push('');
+      rows.push({label:label.trim(), cells:cells.slice(0,cols.length)});
+    }
+  } else {
+    // ヘッダー行なし: 全行をデータ行として処理
+    // 先頭セルを行ラベル、残りをセルとして扱う
+    // 最大列数を検出
+    const maxCols = Math.max(...matrix.map(r=>r.length)) - 1;
+    // 列ヘッダーは自動採番
+    cols = Array.from({length:maxCols},(_,i)=>`列${i+1}`);
+    for(const row of matrix){
+      const label = row[0]||'';
+      const cells = row.slice(1).map(c=>c.trim());
+      while(cells.length < maxCols) cells.push('');
+      rows.push({label:label.trim(), cells:cells.slice(0,maxCols)});
+    }
+  }
+
+  if(!cols.length || !rows.length) return;
+
+  steState = {cols, rows};
+  renderSteTable();
+}
+
+function steClear(){
+  steState={cols:[],rows:[]};
+  renderSteTable();
+  document.getElementById('ste-paste-area').value='';
+}
+
 function steAddRow(){steState.rows.push({label:'新しい行',cells:steState.cols.map(()=>'')});renderSteTable()}
 function steAddCol(){steState.cols.push('新列');steState.rows.forEach(r=>r.cells.push(''));renderSteTable()}
 function steDelRow(i){steState.rows.splice(i,1);renderSteTable()}
@@ -748,286 +753,6 @@ async function delColor(id){if(!confirm('このカラーを削除しますか？
 function admTab(key,el){document.querySelectorAll('.adm-mi').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.adm-sec').forEach(x=>x.classList.remove('on'));el.classList.add('on');document.getElementById('adm-'+key).classList.add('on')}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2500)}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
-
-// =============================================
-// ===== フォルダインポート機能 =====
-// =============================================
-
-let importPlan = []; // 解析結果を保持
-
-// インポートモーダルを開く
-function openImportModal(){
-  resetImport();
-  ['m-cat','m-prod','m-color','m-import'].forEach(id=>{
-    document.getElementById(id).style.display = id==='m-import' ? 'block' : 'none';
-  });
-  document.getElementById('ov').classList.add('on');
-}
-
-// フォルダ入力リセット
-function resetImport(){
-  importPlan = [];
-  document.getElementById('import-step1').style.display = 'block';
-  document.getElementById('import-step2').style.display = 'none';
-  document.getElementById('import-exec-btn').style.display = 'none';
-  document.getElementById('import-folder-input').value = '';
-}
-
-// D&D イベント（インポートゾーン）
-function importDragOver(e){
-  e.preventDefault();
-  document.getElementById('import-drop-zone').classList.add('imp-drop-active');
-}
-function importDragLeave(e){
-  document.getElementById('import-drop-zone').classList.remove('imp-drop-active');
-}
-function importDrop(e){
-  e.preventDefault();
-  document.getElementById('import-drop-zone').classList.remove('imp-drop-active');
-  const items = e.dataTransfer.items;
-  if(!items) return;
-  // DataTransferItems からファイルを収集
-  const files = [];
-  for(let i=0;i<items.length;i++){
-    const entry = items[i].webkitGetAsEntry ? items[i].webkitGetAsEntry() : null;
-    if(entry && entry.isDirectory){
-      readDirEntry(entry, files, ()=>handleImportFiles(files));
-      return;
-    }
-  }
-  // ファイル直接ドロップの場合
-  handleImportFiles(e.dataTransfer.files);
-}
-
-// ディレクトリエントリーを再帰的に読む
-function readDirEntry(dirEntry, files, done, depth=0){
-  const reader = dirEntry.createReader();
-  reader.readEntries(entries=>{
-    let pending = entries.filter(e=>e.isFile||e.isDirectory).length;
-    if(pending===0){done();return}
-    entries.forEach(entry=>{
-      if(entry.isFile){
-        entry.file(f=>{files.push(f);if(--pending===0)done()});
-      } else if(entry.isDirectory && depth<2){
-        readDirEntry(entry, files, ()=>{if(--pending===0)done()}, depth+1);
-      } else {if(--pending===0)done()}
-    });
-  });
-}
-
-// ===== ファイル解析メイン =====
-async function handleImportFiles(fileList){
-  const files = Array.from(fileList).filter(f=>
-    /\.(jpe?g|png|webp)$/i.test(f.name)
-  );
-  if(!files.length){toast('画像ファイルが見つかりませんでした');return}
-
-  // ファイル名解析: {productId, colorName, file, parentFolder}
-  const parsed = [];
-  const skipped = [];
-
-  for(const file of files){
-    // 親フォルダ名を取得（webkitRelativePathから）
-    const relPath = file.webkitRelativePath || file.name;
-    const parts   = relPath.split('/');
-    // parts例: ["1406-01","140601-0001_ホワイト.jpg"]  or ["BAG","1406-01","...jpg"]
-    const parentFolder = parts.length>=3 ? parts[parts.length-3] : (parts.length>=2 ? parts[parts.length-2] : '');
-    const fileName = parts[parts.length-1];
-
-    // ルール: {数字}-{数字}_{カラー名}.ext
-    // productId = ハイフン前の数字部分, colorName = _と拡張子の間
-    const m = fileName.match(/^(\d+)-\d+_(.+)\.(jpe?g|png|webp)$/i);
-    if(!m){skipped.push({name:fileName,reason:'ファイル名の形式が一致しない'});continue}
-
-    const productId = m[1];   // 例: "140601"
-    const colorName = m[2];   // 例: "ホワイト"
-
-    parsed.push({productId, colorName, file, parentFolder, fileName, relPath});
-  }
-
-  if(!parsed.length && skipped.length){
-    toast('解析できるファイルがありませんでした。ファイル名のルールを確認してください');
-    return;
-  }
-
-  // 商品ごとにグループ化
-  const grouped = {};
-  for(const item of parsed){
-    const key = item.productId;
-    if(!grouped[key]) grouped[key] = {
-      productId: key,
-      parentFolder: item.parentFolder,
-      colors: [],
-      files: {}
-    };
-    if(!grouped[key].colors.includes(item.colorName)){
-      grouped[key].colors.push(item.colorName);
-    }
-    grouped[key].files[item.colorName] = item.file;
-    // 最後に見つかった親フォルダを使用
-    if(item.parentFolder) grouped[key].parentFolder = item.parentFolder;
-  }
-
-  // プランを構築: 既存商品か新規かを判定
-  importPlan = [];
-  for(const key of Object.keys(grouped)){
-    const g = grouped[key];
-    const numId = parseInt(g.productId);
-    const existing = db.prods.find(p=> String(p.id) === g.productId || p.id === numId);
-    if(existing){
-      importPlan.push({
-        type: 'update',
-        prod: existing,
-        productId: g.productId,
-        colors: g.colors,
-        files: g.files,
-        parentFolder: g.parentFolder
-      });
-    } else {
-      // 新規: カテゴリーを親フォルダ名で探す
-      const cat = db.cats.find(c=> c.name===g.parentFolder);
-      importPlan.push({
-        type: 'new',
-        productId: g.productId,
-        colors: g.colors,
-        files: g.files,
-        parentFolder: g.parentFolder,
-        catId: cat ? cat.id : null,
-        catName: g.parentFolder
-      });
-    }
-  }
-
-  renderImportPreview(importPlan, skipped);
-}
-
-// プレビューHTMLの描画
-function renderImportPreview(plan, skipped){
-  const updateCount = plan.filter(p=>p.type==='update').length;
-  const newCount    = plan.filter(p=>p.type==='new').length;
-
-  document.getElementById('import-summary').textContent =
-    `${plan.length}件の商品を検出（既存更新: ${updateCount}件、新規追加: ${newCount}件）`;
-
-  let rows = plan.map((item,i)=>{
-    const badge = item.type==='update'
-      ? `<span class="imp-badge imp-badge-update">既存更新</span>`
-      : `<span class="imp-badge imp-badge-new">新規追加</span>`;
-    const name  = item.type==='update'
-      ? item.prod.name || `（ID: ${item.productId}）`
-      : `（新規）`;
-    const catCell = item.type==='update'
-      ? (db.cats.find(c=>c.id===item.prod.catId)||{}).name||'—'
-      : item.catId
-        ? `<span style="color:var(--ok)">${item.catName}</span>`
-        : `<span style="color:var(--err)">${item.catName}（未登録）</span>`;
-    const colorChips = item.colors.map(c=>`<span class="imp-color-chip">${c}</span>`).join('');
-
-    return `<tr>
-      <td>${badge}</td>
-      <td style="font-family:monospace;font-weight:600;color:var(--txt)">${item.productId}</td>
-      <td style="color:var(--txt)">${name}</td>
-      <td>${catCell}</td>
-      <td><div style="display:flex;flex-wrap:wrap;gap:2px">${colorChips}</div></td>
-    </tr>`;
-  }).join('');
-
-  if(!rows) rows = `<tr><td colspan="5" style="text-align:center;color:var(--txt3);padding:20px">インポート対象がありません</td></tr>`;
-
-  document.getElementById('import-preview').innerHTML = `
-    <table class="imp-tbl">
-      <thead><tr><th>種別</th><th>商品ID</th><th>商品名</th><th>カテゴリー</th><th>カラー</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
-
-  // スキップリスト
-  if(skipped.length){
-    document.getElementById('import-skip-list').innerHTML =
-      `<p style="font-size:12px;color:var(--txt3)">⚠ スキップ: ${skipped.map(s=>`<code style="background:var(--bg3);padding:1px 5px;border-radius:3px">${s.name}</code>`).join(' ')}</p>`;
-  }
-
-  document.getElementById('import-step1').style.display = 'none';
-  document.getElementById('import-step2').style.display = 'block';
-  document.getElementById('import-exec-btn').style.display = plan.length ? 'inline-block' : 'none';
-}
-
-// ===== 実際のインポート実行 =====
-async function execImport(){
-  // 画像をBase64に変換してから処理
-  const btn = document.getElementById('import-exec-btn');
-  btn.textContent = '処理中...'; btn.disabled = true;
-
-  let updatedCount = 0, addedCount = 0;
-
-  for(const item of importPlan){
-    // 各カラーの画像をBase64変換
-    const colorImgsB64 = {};
-    for(const [colorName, file] of Object.entries(item.files)){
-      try {
-        colorImgsB64[colorName] = await fileToBase64(file);
-      } catch(e) {
-        console.warn('画像変換失敗:', file.name, e);
-      }
-    }
-
-    if(item.type==='update'){
-      // 既存商品: カラー配列にない色を追加、画像を上書き
-      for(const colorName of item.colors){
-        if(!item.prod.colors.includes(colorName)){
-          item.prod.colors.push(colorName);
-        }
-        if(colorImgsB64[colorName]){
-          if(!item.prod.colorImgs) item.prod.colorImgs = {};
-          item.prod.colorImgs[colorName] = colorImgsB64[colorName];
-        }
-      }
-      updatedCount++;
-    } else {
-      // 新規商品: カテゴリーがない場合は自動作成
-      let catId = item.catId;
-      if(!catId && item.catName){
-        const newCat = {id:db.nextCatId++, name:item.catName, img:null, active:true};
-        db.cats.push(newCat);
-        catId = newCat.id;
-      }
-      const numId = parseInt(item.productId) || db.nextProdId;
-      db.prods.push({
-        id: numId,
-        catId: catId,
-        name: '',
-        headline: '',
-        desc: '',
-        price: 0,
-        colors: item.colors,
-        colorImgs: colorImgsB64,
-        sizes: ['S','M','L','XL','XXL','XXXL'],
-        sizeTable: null,
-        active: true
-      });
-      db.nextProdId = Math.max(db.nextProdId, numId+1);
-      addedCount++;
-    }
-  }
-
-  await persistToServer();
-  renderAdmProds(); renderAdmCats(); renderTop();
-  closeModal();
-
-  btn.textContent = '✓ この内容でインポート'; btn.disabled = false;
-  toast(`✓ インポート完了 — 更新: ${updatedCount}件、新規: ${addedCount}件`);
-}
-
-// File → Base64
-function fileToBase64(file){
-  return new Promise((resolve, reject)=>{
-    const r = new FileReader();
-    r.onload  = e => resolve(e.target.result);
-    r.onerror = reject;
-    r.readAsDataURL(file);
-  });
-}
-
-// =============================================
 
 // ===== BOOT =====
 initApp();
